@@ -15,6 +15,7 @@ use serde_json as json;
 use std::{
     fs::File,
     io::{BufRead, BufReader},
+    num::NonZeroUsize,
     path::{Path, PathBuf},
     str::FromStr,
     sync::{
@@ -232,6 +233,9 @@ pub struct FuzzOptions {
     /// Whether to apply swarm testing to actions. Otherwise all actions are enabled.
     #[arg(long)]
     pub swarm: bool,
+    /// Number of test runs to execute in parallel.
+    #[arg(long, default_value = "1")]
+    pub parallelism: NonZeroUsize,
 
     #[arg(long, value_parser = duration::parse_duration, default_value = "5m")]
     pub time_limit_fuzz: Duration,
@@ -596,6 +600,9 @@ fn browser_test(
             ExitReason::TimeLimit => {
                 format!("Test finished after time limit{findings}!")
             }
+            ExitReason::Stalled => {
+                format!("Test stopped after the browser stalled{findings}!")
+            }
             ExitReason::Interrupted => {
                 format!("Test was interrupted by SIGINT{findings}!",)
             }
@@ -635,6 +642,9 @@ fn browser_test(
 
     if test_result.violations_count > 0 {
         std::process::exit(2);
+    }
+    if let ExitReason::Stalled = test_result.exit_reason {
+        std::process::exit(1);
     }
 
     Ok(())
@@ -702,6 +712,7 @@ fn browser_fuzz(
         time_limit_fuzz: fuzz_options.time_limit_fuzz,
         time_limit_run: fuzz_options.time_limit_run,
         swarm: fuzz_options.swarm,
+        parallelism: fuzz_options.parallelism,
         output_writer,
     })?;
 
