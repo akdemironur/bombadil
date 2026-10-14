@@ -79,6 +79,7 @@ reqwest = { version = "0.13.4", features = ["blocking", "json"] }
 scraper = "0.27.0"
 serde = "1.0.228"
 serde_json = { version = "1.0.145", features = ["raw_value"] }
+strum = { version = "0.28.0", features = ["derive"] }
 supports-color = "3.0.2"
 tempfile = "3.22.0"
 tokio = "1.48.0"
